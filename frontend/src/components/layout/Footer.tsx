@@ -21,7 +21,7 @@ export function Footer() {
         <div>
           <h4 className="text-wool-cream/30 text-[10px] tracking-[2px] uppercase mb-4">Navegación</h4>
           <ul className="space-y-2">
-            {['Inicio','Catálogo','Promociones','Probador Virtual','Contacto'].map((item) => (
+            {['Inicio','Catálogo','Nosotros','Probador Virtual','Contacto'].map((item) => (
               <li key={item}><Link href="#" className="text-wool-cream/60 text-sm hover:text-inca-gold transition-colors">{item}</Link></li>
             ))}
           </ul>

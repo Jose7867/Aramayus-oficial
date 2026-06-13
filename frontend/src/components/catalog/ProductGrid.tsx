@@ -6,12 +6,12 @@ import type { Product } from '@types/product'
 
 // Mock data (reemplazar con fetch a la API)
 const PRODUCTS: Product[] = [
-  { id:'1', name:'Chompa Andina Wari',   category:'Chompas',    price:185, images:['/images/products/chompa-wari.jpg'],   colors:['#8B1A1A','#2D5A3D','#C8860A'], sizes:['S','M','L','XL'], stock:{}, material:'Alpaca', weight:420, tag:'Destacado', featured:true,  active:true, createdAt:'' },
-  { id:'2', name:'Camisa Chakana Verde', category:'Camisas',    price:120, images:['/images/products/camisa.jpg'],        colors:['#2D5A3D','#7B5EA7','#F5F0E8'], sizes:['XS','S','M','L'],  stock:{}, material:'Algodón Pima', weight:280, tag:'Nuevo',    featured:true,  active:true, createdAt:'' },
-  { id:'3', name:'Poncho Tawantinsuyu',  category:'Ponchos',    price:220, originalPrice:280, images:['/images/products/poncho.jpg'],  colors:['#7B5EA7','#8B1A1A'],           sizes:['S','M','L','XL'], stock:{}, material:'Alpaca y Oveja', weight:850, tag:'Promo', featured:true,  active:true, createdAt:'' },
-  { id:'4', name:'Falda Pollera Inca',   category:'Faldas',     price:155, images:['/images/products/falda.jpg'],        colors:['#C8860A','#2D5A3D','#8B1A1A'],  sizes:['XS','S','M','L'],  stock:{}, material:'Lana y Algodón', weight:600, tag:'Destacado', featured:true, active:true, createdAt:'' },
-  { id:'5', name:'Bolso Tejido Qero',    category:'Accesorios', price:75,  images:['/images/products/bolso.jpg'],        colors:['#1A0A00','#C8860A'],             sizes:['Único'],           stock:{}, material:'Alpaca', weight:180, tag:'Nuevo',    featured:false, active:true, createdAt:'' },
-  { id:'6', name:'Vestido Pachamama',    category:'Vestidos',   price:195, originalPrice:240, images:['/images/products/vestido.jpg'], colors:['#8B1A1A','#7B5EA7','#2D5A3D'], sizes:['S','M','L','XL'], stock:{}, material:'Algodón y Seda', weight:350, tag:'Promo', featured:true, active:true, createdAt:'' },
+  { id:'1', name:'Chompa Andina Wari',   category:'Chompas',    price:185, images:['/images/products/chompa-wari.jpeg'],   colors:['#8B1A1A','#2D5A3D','#C8860A'], sizes:['S','M','L','XL'], stock:{}, material:'Alpaca', weight:420, tag:'Destacado', featured:true,  active:true, createdAt:'' },
+  { id:'2', name:'Camisa Chakana Roja', category:'Camisas',    price:120, images:['/images/products/camisa-chakana.jpeg'],        colors:['#8B1A1A','#7B5EA7','#F5F0E8'], sizes:['XS','S','M','L'],  stock:{}, material:'Algodón Pima', weight:280, tag:'Nuevo',    featured:true,  active:true, createdAt:'' },
+  { id:'3', name:'Poncho Tawantinsuyu',  category:'Ponchos',    price:220, originalPrice:280, images:['/images/products/poncho.jpeg'],  colors:['#7B5EA7','#8B1A1A'],           sizes:['S','M','L','XL'], stock:{}, material:'Alpaca y Oveja', weight:850, tag:'Promo', featured:true,  active:true, createdAt:'' },
+  { id:'4', name:'Guantes',   category:'Faldas',     price:155, images:['/images/products/Guante-tejido.jpeg'],        colors:['#C8860A','#2D5A3D','#8B1A1A'],  sizes:['XS','S','M','L'],  stock:{}, material:'Lana y Algodón', weight:600, tag:'Destacado', featured:true, active:true, createdAt:'' },
+  { id:'5', name:'Bolso Tejido Qero',    category:'Accesorios', price:75,  images:['/images/products/bolso1.jpeg'],        colors:['#1A0A00','#C8860A'],             sizes:['Único'],           stock:{}, material:'Alpaca', weight:180, tag:'Nuevo',    featured:false, active:true, createdAt:'' },
+  { id:'6', name:'Accesorios',    category:'Vestidos',   price:195, originalPrice:240, images:['/images/products/Accesorios.jpeg'], colors:['#8B1A1A','#7B5EA7','#2D5A3D'], sizes:['S','M','L','XL'], stock:{}, material:'Algodón y Seda', weight:350, tag:'Promo', featured:true, active:true, createdAt:'' },
 ]
 
 export function ProductGrid() {

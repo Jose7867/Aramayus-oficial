@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Shirt, ShoppingBag, Users, Tag, Package, Settings, BarChart3, Grid3x3 } from 'lucide-react'
+import { LayoutDashboard, Shirt, ShoppingBag, Users, Tag, Package, Settings, BarChart3, Grid3x3, Info } from 'lucide-react'
 
 const NAV = [
   { label:'Dashboard',   href:'/admin/dashboard',      icon:LayoutDashboard },
@@ -9,7 +9,7 @@ const NAV = [
   { label:'Pedidos',     href:'/admin/pedidos',         icon:ShoppingBag,  badge:8 },
   { label:'Clientes',    href:'/admin/clientes',        icon:Users },
   { label:'Categorías',  href:'/admin/categorias',      icon:Grid3x3 },
-  { label:'Promociones', href:'/admin/promociones',     icon:Tag },
+  { label:'Nosotros',    href:'/admin/nosotros',        icon:Info },
   { label:'Inventario',  href:'/admin/configuracion',   icon:Package },
   { label:'Reportes',    href:'/admin/configuracion',   icon:BarChart3 },
   { label:'Config.',     href:'/admin/configuracion',   icon:Settings },

@@ -15,7 +15,7 @@ export function Navbar() {
           </span>
         </Link>
         <div className="hidden md:flex gap-8">
-          {['Inicio','Catálogo','Promociones','Probador','Contacto'].map((item) => (
+          {['Inicio','Catálogo','Nosotros','Probador','Contacto'].map((item) => (
             <Link key={item} href={item === 'Inicio' ? '/' : `/${item.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}`}
               className="text-wool-cream/70 text-xs tracking-widest uppercase hover:text-inca-gold transition-colors">
               {item}
