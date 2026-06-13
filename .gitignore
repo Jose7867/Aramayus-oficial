@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+dist/
+build/
+out/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Uploads (imágenes subidas)
+backend/src/uploads/products/*
+backend/src/uploads/categories/*
+backend/src/uploads/banners/*
+!backend/src/uploads/products/.gitkeep
+!backend/src/uploads/categories/.gitkeep
+!backend/src/uploads/banners/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp

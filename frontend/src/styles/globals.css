@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-gold:   #C8860A;
+    --color-black:  #1A0A00;
+    --color-red:    #8B1A1A;
+    --color-green:  #2D5A3D;
+    --color-purple: #7B5EA7;
+    --color-cream:  #F5F0E8;
+  }
+  html { scroll-behavior: smooth; }
+  body { @apply bg-wool-cream text-andean-black font-sans; }
+  h1,h2,h3 { @apply font-display; }
+}
+
+@layer components {
+  .btn-primary   { @apply bg-inca-gold text-andean-black px-6 py-3 text-xs tracking-widest uppercase font-semibold rounded-sm hover:bg-yellow-600 transition-colors; }
+  .btn-secondary { @apply bg-transparent text-wool-cream border border-wool-cream/40 px-6 py-3 text-xs tracking-widest uppercase rounded-sm hover:border-inca-gold hover:text-inca-gold transition-colors; }
+  .btn-dark      { @apply bg-andean-black text-wool-cream px-6 py-3 text-xs tracking-widest uppercase font-semibold rounded-sm hover:bg-wiphala-red transition-colors; }
+  .andean-divider { @apply w-full h-2 bg-andean-pattern; }
+  .section-eyebrow { @apply text-inca-gold text-xs tracking-widest uppercase mb-2; }
+  .card          { @apply bg-white border border-gray-100 rounded-sm overflow-hidden; }
+  .input-base    { @apply border border-gray-200 rounded-sm px-3 py-2 text-sm focus:outline-none focus:border-inca-gold; }
+}
