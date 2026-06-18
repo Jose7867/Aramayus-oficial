@@ -5,23 +5,44 @@ import { ShoppingBag, User, Search, Menu } from 'lucide-react'
 
 export function Navbar() {
   const itemCount = useCartStore((s) => s.itemCount)
+
+  const NAV_ITEMS = ['Inicio', 'Nosotros', 'Probador', 'Contacto']
+
   return (
     <nav className="bg-andean-black sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+
+        {/* Logo */}
         <Link href="/" className="font-display text-xl text-inca-gold italic">
           Aramayus
           <span className="block text-wool-cream not-italic text-[10px] tracking-[3px] font-sans font-light">
             Art Textil Andino
           </span>
         </Link>
-        <div className="hidden md:flex gap-8">
-          {['Inicio','Catálogo','Nosotros','Probador','Contacto'].map((item) => (
-            <Link key={item} href={item === 'Inicio' ? '/' : `/${item.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}`}
-              className="text-wool-cream/70 text-xs tracking-widest uppercase hover:text-inca-gold transition-colors">
+
+        {/* Links de navegación */}
+        <div className="hidden md:flex gap-8 items-center">
+
+          {/* Catálogo — link directo a todos los productos */}
+          <Link
+            href="/catalogo"
+            className="text-wool-cream/70 text-xs tracking-widest uppercase hover:text-inca-gold transition-colors"
+          >
+            Catálogo
+          </Link>
+
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item}
+              href={item === 'Inicio' ? '/' : `/${item.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}`}
+              className="text-wool-cream/70 text-xs tracking-widest uppercase hover:text-inca-gold transition-colors"
+            >
               {item}
             </Link>
           ))}
         </div>
+
+        {/* Iconos derecha */}
         <div className="flex items-center gap-4">
           <Search className="text-wool-cream/70 w-5 h-5 cursor-pointer hover:text-inca-gold transition-colors" />
           <Link href="/cuenta/perfil">
@@ -35,6 +56,11 @@ export function Navbar() {
               </span>
             )}
           </Link>
+
+          {/* Hamburguesa móvil */}
+          <button className="md:hidden text-wool-cream/70 hover:text-inca-gold transition-colors">
+            <Menu className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </nav>

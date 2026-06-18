@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { LayoutGrid, List } from 'lucide-react'
 import { ProductCard } from '@components/shared/ProductCard'
 import type { Product } from '@types/product'
@@ -17,12 +18,27 @@ const PRODUCTS: Product[] = [
 export function ProductGrid() {
   const [view, setView]   = useState<'grid'|'list'>('grid')
   const [sort, setSort]   = useState('relevance')
+  const searchParams = useSearchParams()
+
+  const categoryFilter = searchParams.get('category')
+  const materialFilter = searchParams.get('material')
+  const ocasionFilter = searchParams.get('ocasion')
+  const collectionFilter = searchParams.get('collection') || searchParams.get('coleccion')
+
+  let filteredProducts = PRODUCTS
+  
+  if (categoryFilter) {
+    filteredProducts = filteredProducts.filter(p => p.category.toLowerCase() === categoryFilter.toLowerCase())
+  }
+  if (materialFilter) {
+    filteredProducts = filteredProducts.filter(p => p.material.toLowerCase().includes(materialFilter.toLowerCase()))
+  }
 
   return (
     <div className="flex-1">
       {/* Toolbar */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-500"><strong className="text-andean-black">{PRODUCTS.length}</strong> productos encontrados</p>
+        <p className="text-sm text-gray-500"><strong className="text-andean-black">{filteredProducts.length}</strong> productos encontrados</p>
         <div className="flex items-center gap-3">
           <select value={sort} onChange={(e) => setSort(e.target.value)}
             className="input-base text-xs py-1.5">
@@ -44,7 +60,7 @@ export function ProductGrid() {
 
       {/* Grid */}
       <div className={view === 'grid' ? 'grid grid-cols-2 xl:grid-cols-3 gap-5' : 'flex flex-col gap-4'}>
-        {PRODUCTS.map((p) => <ProductCard key={p.id} product={p} />)}
+        {filteredProducts.map((p) => <ProductCard key={p.id} product={p} />)}
       </div>
 
       {/* Paginación */}

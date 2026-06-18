@@ -12,7 +12,7 @@ export function ProductCard({ product }: Props) {
   return (
     <div className="card group cursor-pointer">
       <div className="relative overflow-hidden">
-        <Link href={`/producto?id=${product.id}`}>
+        <Link href={`/producto/${product.id}`}>
           <Image src={product.images[0]} alt={product.name} width={400} height={500}
             className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500" />
         </Link>
@@ -28,8 +28,10 @@ export function ProductCard({ product }: Props) {
         </button>
       </div>
       <div className="p-4">
-        <p className="text-[10px] tracking-widest uppercase text-wiphala-red mb-1">{product.category}</p>
-        <h3 className="font-display text-base leading-tight mb-2">{product.name}</h3>
+        <Link href={`/producto/${product.id}`}>
+          <p className="text-[10px] tracking-widest uppercase text-wiphala-red mb-1">{product.category}</p>
+          <h3 className="font-display text-base leading-tight mb-2 hover:text-inca-gold transition-colors">{product.name}</h3>
+        </Link>
         <div className="flex gap-1.5 mb-3">
           {product.colors.slice(0,4).map((c) => (
             <div key={c} className="w-3 h-3 rounded-full border border-black/10" style={{ background: c }} />
@@ -49,3 +51,4 @@ export function ProductCard({ product }: Props) {
     </div>
   )
 }
+
