@@ -1,7 +1,9 @@
 'use client'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Shirt, ShoppingBag, Users, Tag, Package, Settings, BarChart3, Grid3x3, Info } from 'lucide-react'
+import { LayoutDashboard, Shirt, ShoppingBag, Users, Tag, Package, Settings, BarChart3, Grid3x3, Info, LogOut } from 'lucide-react'
+import { useAuthStore } from '@store/authStore'
 
 const NAV = [
   { label:'Dashboard',   href:'/admin/dashboard',      icon:LayoutDashboard },
@@ -16,7 +18,19 @@ const NAV = [
 ]
 
 export function AdminSidebar() {
-  const path = usePathname()
+  const path    = usePathname()
+  const router  = useRouter()
+  const { user, logout } = useAuthStore()
+
+  const initials = user?.name
+    ? user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'AA'
+
+  const handleLogout = () => {
+    logout()
+    router.replace('/auth/login')
+  }
+
   return (
     <aside className="w-52 bg-andean-black flex flex-col flex-shrink-0">
       <div className="p-4 border-b border-wool-cream/8">
@@ -35,11 +49,22 @@ export function AdminSidebar() {
         ))}
       </nav>
       <div className="p-3 border-t border-wool-cream/8">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-inca-gold/20 flex items-center justify-center text-inca-gold text-xs font-semibold">AA</div>
-          <div><div className="text-wool-cream/60 text-xs">Admin</div><div className="text-wool-cream/30 text-[10px]">Administrador</div></div>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-7 h-7 rounded-full bg-inca-gold/20 flex items-center justify-center text-inca-gold text-xs font-semibold">{initials}</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-wool-cream/80 text-xs truncate">{user?.name || 'Administrador'}</div>
+            <div className="text-wool-cream/30 text-[10px] truncate">{user?.email || ''}</div>
+          </div>
         </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2 text-wool-cream/40 hover:text-wiphala-red transition-colors text-[10px] uppercase tracking-widest py-1"
+        >
+          <LogOut className="w-3 h-3" />
+          Cerrar sesión
+        </button>
       </div>
     </aside>
   )
 }
+

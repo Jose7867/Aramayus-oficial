@@ -3,6 +3,16 @@ import Image from 'next/image'
 import { Trash2, Plus, Minus } from 'lucide-react'
 import { useCartStore } from '@store/cartStore'
 
+// ─── Mapa de nombres de colores (BUG-009) ────────────────────────────────────
+const COLOR_NAMES: Record<string, string> = {
+  '#8B1A1A': 'Rojo Andino',
+  '#2D5A3D': 'Verde Coca',
+  '#C8860A': 'Dorado Inca',
+  '#7B5EA7': 'Morado Wiphala',
+  '#F5F0E8': 'Crema Natural',
+  '#1A0A00': 'Negro Obsidiana',
+}
+
 export function CartItems() {
   const { items, updateQuantity, removeItem } = useCartStore()
 
@@ -30,7 +40,7 @@ export function CartItems() {
             <div className="flex gap-2 flex-wrap mb-2">
               <span className="text-[10px] px-2 py-0.5 border border-gray-200 rounded-sm text-gray-500">
                 <span className="inline-block w-2 h-2 rounded-full mr-1" style={{ background: item.selectedColor }}></span>
-                {item.selectedColor}
+                {COLOR_NAMES[item.selectedColor] || item.selectedColor}
               </span>
               <span className="text-[10px] px-2 py-0.5 border border-gray-200 rounded-sm text-gray-500">Talla {item.selectedSize}</span>
               <span className="text-[10px] px-2 py-0.5 border border-gray-200 rounded-sm text-gray-500">{item.product.material}</span>
@@ -52,8 +62,9 @@ export function CartItems() {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-xs text-gray-400">S/ {item.product.price} c/u</p>
-            <p className="text-lg font-semibold">S/ {item.product.price * item.quantity}</p>
+            {/* BUG-002: .toFixed(2) en precios */}
+            <p className="text-xs text-gray-400">S/ {item.product.price.toFixed(2)} c/u</p>
+            <p className="text-lg font-semibold">S/ {(item.product.price * item.quantity).toFixed(2)}</p>
           </div>
         </div>
       ))}

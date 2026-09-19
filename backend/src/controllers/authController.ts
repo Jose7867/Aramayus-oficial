@@ -1,22 +1,23 @@
 import { Request, Response } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { pool } from '../config/database'
+import { randomUUID } from 'crypto'
+import { db } from '../config/database'
 
 const signToken = (id: string, role: string, email: string) =>
-  jwt.sign({ id, role, email }, process.env.JWT_SECRET!, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' })
+  jwt.sign({ id, role, email }, process.env.JWT_SECRET!, { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any })
 
 export async function login(req: Request, res: Response) {
   try {
     const { email, password } = req.body
     if (!email || !password) return res.status(400).json({ message: 'Email y contraseña requeridos' })
-    const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email])
-    const user = rows[0]
+    const user = await db('users').where({ email }).first() as any
     if (!user || !(await bcrypt.compare(password, user.password_hash)))
       return res.status(401).json({ message: 'Credenciales inválidas' })
     const token = signToken(user.id, user.role, user.email)
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } })
   } catch (err) {
+    console.error(err)
     res.status(500).json({ message: 'Error del servidor' })
   }
 }
@@ -24,28 +25,25 @@ export async function login(req: Request, res: Response) {
 export async function register(req: Request, res: Response) {
   try {
     const { name, email, password, phone } = req.body
-    const exists = await pool.query('SELECT id FROM users WHERE email = $1', [email])
-    if (exists.rows.length) return res.status(409).json({ message: 'El email ya está registrado' })
+    const exists = await db('users').where({ email }).first()
+    if (exists) return res.status(409).json({ message: 'El email ya está registrado' })
     const hash = await bcrypt.hash(password, 12)
-    const { rows } = await pool.query(
-      'INSERT INTO users (name, email, password_hash, phone, role) VALUES ($1,$2,$3,$4,$5) RETURNING id, name, email, role',
-      [name, email, hash, phone || null, 'customer']
-    )
-    const token = signToken(rows[0].id, 'customer', email)
-    res.status(201).json({ token, user: rows[0] })
-  } catch {
+    const id = randomUUID()
+    await db('users').insert({ id, name, email, password_hash: hash, phone: phone || null, role: 'customer' })
+    const user = await db('users').select('id', 'name', 'email', 'role').where({ id }).first() as any
+    const token = signToken(user.id, 'customer', email)
+    res.status(201).json({ token, user })
+  } catch (err) {
+    console.error(err)
     res.status(500).json({ message: 'Error del servidor' })
   }
 }
 
 export async function me(req: any, res: Response) {
   try {
-    const { rows } = await pool.query(
-      'SELECT id, name, email, phone, role, created_at FROM users WHERE id = $1',
-      [req.user.id]
-    )
-    if (!rows[0]) return res.status(404).json({ message: 'Usuario no encontrado' })
-    res.json(rows[0])
+    const user = await db('users').select('id', 'name', 'email', 'phone', 'role', 'created_at').where({ id: req.user.id }).first()
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado' })
+    res.json(user)
   } catch {
     res.status(500).json({ message: 'Error del servidor' })
   }
@@ -61,3 +59,4 @@ export async function refreshToken(req: Request, res: Response) {
     res.status(401).json({ message: 'Token inválido' })
   }
 }
+

@@ -1,199 +1,416 @@
-'use client'
-import { useState } from 'react'
-import { AVATAR_TYPES, BRAND_COLORS } from '@constants/index'
+"use client";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  MouseEvent as ReactMouseEvent,
+  TouchEvent as ReactTouchEvent,
+} from "react";
+import Link from "next/link";
+import {
+  ShoppingBag,
+  Ruler,
+  ArrowLeft,
+  CheckCircle2,
+  RotateCcw,
+  Info,
+} from "lucide-react";
+import { useCartStore } from "@store/cartStore";
+import type { Product } from "@/types/product";
+import {
+  resolveProductAssetFolder,
+  resolveProductVideoUrl,
+} from "@/lib/productAssetPaths";
 
-type Cuello = 'V' | 'Redondo' | 'Tortuga'
-type Mangas = 'Larga' | 'Corta' | 'Sin Mangas'
-type Tejido = 'Alpaca' | 'Algodón Pima' | 'Lana' | 'Lino'
+interface FittingRoomProps {
+  product: Product;
+}
 
-export function VirtualFittingRoom() {
-  const [tab, setTab] = useState(1)
-  const [gender, setGender]       = useState<'F'|'M'>('F')
-  const [cuello, setCuello]       = useState<Cuello>('V')
-  const [mangas, setMangas]       = useState<Mangas>('Larga')
-  const [tejido, setTejido]       = useState<Tejido>('Alpaca')
-  const [color, setColor]         = useState('#C8860A')
-  const [avatarId, setAvatarId]   = useState('f2')
-  const [size, setSize]           = useState('M')
+const TOTAL_IMAGES = 72; // Asumimos 36 imágenes (0.png a 35.png)
+const FULL_ROTATION_PX = 500; // Píxeles de arrastre para una rotación completa
 
-  const avatars = AVATAR_TYPES.filter((a) => a.gender === gender)
+export function VirtualFittingRoom({ product }: FittingRoomProps) {
+  const rotationProgressRef = useRef(0);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
 
-  // SVG paths for Cuello
-  const cuelloPath = cuello === 'V' 
-    ? "M 75 70 L 90 95 L 105 70" 
-    : cuello === 'Redondo'
-    ? "M 75 70 Q 90 85 105 70"
-    : "M 75 70 L 75 55 L 105 55 L 105 70"
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoReady, setVideoReady] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+
+  // Throttle del drag con requestAnimationFrame
+  const rafRef = useRef<number | null>(null);
+  const pendingXRef = useRef<number | null>(null);
+
+  const [weight, setWeight] = useState("");
+  const [height, setHeight] = useState("");
+  const [recommendedSize, setRecommendedSize] = useState<string | null>(null);
+
+  const [addedFeedback, setAddedFeedback] = useState(false);
+  const addItem = useCartStore((s) => s.addItem);
+
+  const folderName = resolveProductAssetFolder(product) ?? "";
+  const isVideoProduct =
+    Boolean(product.video360) || product.model === "milano";
+  const videoUrl =
+    resolveProductVideoUrl(product) ||
+    "/images/products/Milano/rotacion-360.mp4";
+  const posterUrl =
+    product.images?.[0] ||
+    (folderName ? `/images/products/${folderName}/milano.jpeg` : "");
+
+  // Calculador de talla recomendada (heurística básica con IMC)
+  useEffect(() => {
+    if (weight && height) {
+      const w = parseFloat(weight);
+      const h = parseFloat(height) / 100; // cm a m
+      if (w > 0 && h > 0) {
+        const bmi = w / (h * h);
+        let rec = "M";
+        if (bmi < 18.5) rec = "XS";
+        else if (bmi < 22) rec = "S";
+        else if (bmi < 25) rec = "M";
+        else if (bmi < 28) rec = "L";
+        else rec = "XL";
+
+        if (product.sizes.includes(rec)) {
+          setRecommendedSize(rec);
+        } else {
+          setRecommendedSize(product.sizes[0]);
+        }
+      }
+    } else {
+      setRecommendedSize(null);
+    }
+  }, [weight, height, product.sizes]);
+
+  // --- Precarga de imágenes (solo para productos sin video) ---
+  useEffect(() => {
+    if (isVideoProduct) return;
+    setImagesLoaded(false);
+    let loadedCount = 0;
+    let cancelled = false;
+
+    for (let i = 0; i < TOTAL_IMAGES; i++) {
+      const img = new window.Image();
+      img.src = `/images/products/${folderName}/${i}.png`;
+      img.onload = img.onerror = () => {
+        loadedCount++;
+        if (!cancelled && loadedCount === TOTAL_IMAGES) {
+          setImagesLoaded(true);
+        }
+      };
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [folderName, isVideoProduct]);
+
+  // --- Detectar cuándo el video está listo para scrubbing sin cortes ---
+  useEffect(() => {
+    if (!isVideoProduct) return;
+    setVideoReady(false);
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleCanPlayThrough = () => setVideoReady(true);
+    video.addEventListener("canplaythrough", handleCanPlayThrough);
+
+    // Por si ya estaba cacheado y el evento no dispara de nuevo
+    if (video.readyState >= 4) setVideoReady(true);
+
+    return () => {
+      video.removeEventListener("canplaythrough", handleCanPlayThrough);
+    };
+  }, [isVideoProduct, videoUrl]);
+
+  // Mantener el video en pausa por defecto para que el scrubbing (seek)
+  // funcione correctamente cuando el usuario arrastra para rotar.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (videoReady) {
+      try {
+        video.pause();
+        // Asegurar tiempo inicial consistente
+        if (video.duration && !isNaN(video.duration)) {
+          video.currentTime = rotationProgressRef.current * video.duration;
+        }
+      } catch (err) {
+        // ignore
+      }
+    }
+  }, [videoReady]);
+
+  // --- Procesa el frame de arrastre (llamado vía rAF) ---
+  const applyDragFrame = useCallback(() => {
+    rafRef.current = null;
+    if (pendingXRef.current === null) return;
+
+    const x = pendingXRef.current;
+    const deltaX = x - startXRef.current;
+    const deltaProgress = deltaX / FULL_ROTATION_PX;
+
+    let nextProgress = rotationProgressRef.current + deltaProgress;
+    while (nextProgress < 0) nextProgress += 1;
+    nextProgress = nextProgress % 1;
+    rotationProgressRef.current = nextProgress;
+
+    const video = videoRef.current;
+    if (video && video.duration && !isNaN(video.duration)) {
+      // Evita apilar peticiones de seek mientras el navegador resuelve la anterior
+      if (!video.seeking) {
+        video.currentTime = nextProgress * video.duration;
+      }
+    }
+
+    setCurrentIdx((prev) => {
+      const newIdx = Math.floor(nextProgress * TOTAL_IMAGES) % TOTAL_IMAGES;
+      return prev !== newIdx ? newIdx : prev;
+    });
+
+    startXRef.current = x;
+  }, []);
+
+  // --- Manejo del Arrastre (Mouse & Touch) ---
+  const handleDragStart = (x: number) => {
+    setIsDragging(true);
+    isDraggingRef.current = true;
+    startXRef.current = x;
+    // Pausar video al iniciar arrastre para evitar que la reproducción
+    // automática interfiera con el seek por currentTime.
+    const v = videoRef.current;
+    if (v) v.pause();
+  };
+
+  const handleDragMove = (x: number) => {
+    if (!isDraggingRef.current) return;
+    pendingXRef.current = x;
+    if (rafRef.current === null) {
+      rafRef.current = requestAnimationFrame(applyDragFrame);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    isDraggingRef.current = false;
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    pendingXRef.current = null;
+  };
+
+  // Limpieza del rAF al desmontar
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  // --- Acciones ---
+  const handleAddToCart = () => {
+    const sizeToUse = recommendedSize || product.sizes[0];
+    addItem({ ...product, colors: [product.colors[0]], sizes: [sizeToUse] });
+    setAddedFeedback(true);
+    setTimeout(() => setAddedFeedback(false), 2000);
+  };
+
+  const resetView = () => {
+    rotationProgressRef.current = 0;
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+    }
+    setCurrentIdx(0);
+  };
+
+  const currentImageUrl = `/images/products/${folderName}/${currentIdx}.png`;
+  const isReady = isVideoProduct ? videoReady : imagesLoaded;
 
   return (
-    <div className="min-h-screen bg-andean-black text-wool-cream">
-      <div className="max-w-6xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-10 items-start">
-        
-        {/* Panel Izquierdo — Controles */}
-        <div className="w-full md:w-1/2 space-y-6">
-          <div>
-            <p className="text-inca-gold text-[10px] tracking-widest uppercase mb-1">Diseñador 3D</p>
-            <h1 className="font-display text-4xl">Crea tu prenda a medida</h1>
-          </div>
-
-          {/* TABS */}
-          <div className="flex border-b border-wool-cream/10">
-            {['1. Estilo', '2. Tejido', '3. Medidas'].map((t, i) => (
-              <button key={t} onClick={() => setTab(i+1)}
-                className={`px-6 py-3 text-sm font-medium transition-all border-b-2 ${tab === i+1 ? 'border-inca-gold text-inca-gold' : 'border-transparent text-wool-cream/50 hover:text-wool-cream'}`}>
-                {t}
-              </button>
-            ))}
-          </div>
-
-          {/* TAB 1: ESTILO */}
-          {tab === 1 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
-              <div>
-                <p className="text-wool-cream/40 text-[10px] tracking-widest uppercase mb-3">Tipo de Cuello</p>
-                <div className="grid grid-cols-3 gap-3">
-                  {(['V', 'Redondo', 'Tortuga'] as Cuello[]).map(c => (
-                    <button key={c} onClick={() => setCuello(c)}
-                      className={`p-3 border rounded-sm text-sm transition-all ${cuello === c ? 'bg-inca-gold/15 border-inca-gold text-inca-gold font-medium' : 'border-wool-cream/15 text-wool-cream/70 hover:border-wool-cream/40'}`}>
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-wool-cream/40 text-[10px] tracking-widest uppercase mb-3">Longitud de Mangas</p>
-                <div className="grid grid-cols-3 gap-3">
-                  {(['Larga', 'Corta', 'Sin Mangas'] as Mangas[]).map(m => (
-                    <button key={m} onClick={() => setMangas(m)}
-                      className={`p-3 border rounded-sm text-sm transition-all ${mangas === m ? 'bg-inca-gold/15 border-inca-gold text-inca-gold font-medium' : 'border-wool-cream/15 text-wool-cream/70 hover:border-wool-cream/40'}`}>
-                      {m}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: TEJIDO */}
-          {tab === 2 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
-              <div>
-                <p className="text-wool-cream/40 text-[10px] tracking-widest uppercase mb-3">Material</p>
-                <div className="grid grid-cols-2 gap-3">
-                  {(['Alpaca', 'Algodón Pima', 'Lana', 'Lino'] as Tejido[]).map(t => (
-                    <button key={t} onClick={() => setTejido(t)}
-                      className={`p-3 border rounded-sm text-left transition-all ${tejido === t ? 'border-inca-gold bg-inca-gold/10' : 'border-wool-cream/10 hover:border-wool-cream/25'}`}>
-                      <p className={`text-sm font-medium ${tejido === t ? 'text-inca-gold' : 'text-wool-cream'}`}>{t}</p>
-                      <p className="text-wool-cream/40 text-[10px] mt-1">Calidad Premium</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-wool-cream/40 text-[10px] tracking-widest uppercase mb-3">Color de prenda</p>
-                <div className="flex flex-wrap gap-4">
-                  {Object.values(BRAND_COLORS).map((hex) => (
-                    <button key={hex} onClick={() => setColor(hex)}
-                      className={`w-10 h-10 rounded-full border-2 transition-all ${color === hex ? 'border-inca-gold scale-125' : 'border-transparent hover:scale-110'}`}
-                      style={{ background: hex, boxShadow: color === hex ? '0 0 0 2px rgba(245,240,232,0.1) inset' : 'none' }} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: MEDIDAS */}
-          {tab === 3 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
-              <div>
-                <p className="text-wool-cream/40 text-[10px] tracking-widest uppercase mb-3">Tipo de modelo</p>
-                <div className="flex gap-2">
-                  {(['F','M'] as const).map((g) => (
-                    <button key={g} onClick={() => setGender(g)}
-                      className={`px-5 py-2 border rounded-sm text-sm transition-all ${gender === g ? 'bg-inca-gold/15 border-inca-gold text-inca-gold' : 'border-wool-cream/15 text-wool-cream/50 hover:border-wool-cream/30'}`}>
-                      {g === 'F' ? 'Femenino' : 'Masculino'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-wool-cream/40 text-[10px] tracking-widest uppercase mb-3">Complexión (Avatar)</p>
-                <div className="grid grid-cols-2 gap-3">
-                  {avatars.map((av) => (
-                    <button key={av.id} onClick={() => setAvatarId(av.id)}
-                      className={`p-3 border rounded-sm text-left transition-all ${avatarId === av.id ? 'border-inca-gold bg-inca-gold/10' : 'border-wool-cream/10 hover:border-wool-cream/25'}`}>
-                      <p className="text-wool-cream/90 text-xs font-medium">{av.label.split('—')[1]?.trim()}</p>
-                      <p className="text-wool-cream/40 text-[10px] mt-0.5">{av.height} cm · {av.weight} kg</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-wool-cream/40 text-[10px] tracking-widest uppercase mb-3">Talla de prenda</p>
-                <div className="flex gap-2">
-                  {['XS','S','M','L','XL','XXL'].map((s) => (
-                    <button key={s} onClick={() => setSize(s)}
-                      className={`w-10 h-10 border rounded-sm text-sm transition-all ${size === s ? 'bg-inca-gold text-andean-black border-inca-gold font-bold' : 'border-wool-cream/15 text-wool-cream/50 hover:border-inca-gold'}`}>
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-          
-        </div>
-
-        {/* Panel Derecho — Vista Previa Interactiva */}
-        <div className="w-full md:w-1/2 flex justify-center sticky top-8">
-          <div className="bg-[#1C1C1C] border border-wool-cream/5 rounded-lg p-10 w-full max-w-md flex flex-col items-center relative overflow-hidden">
-            
-            <div className="absolute top-4 left-4 text-[10px] text-wool-cream/30 uppercase tracking-[2px]">Previsualización en tiempo real</div>
-            
-            <svg width="240" height="340" viewBox="0 0 180 260" fill="none" xmlns="http://www.w3.org/2000/svg" className="mt-8 transition-all duration-500">
-              {/* Cabeza / Avatar (transparente) */}
-              <circle cx="90" cy="46" r="32" fill="rgba(245,240,232,0.05)" stroke="rgba(245,240,232,0.15)" strokeWidth="1"/>
-              
-              {/* Torso Prenda */}
-              <path d="M40 90 Q40 70 90 70 Q140 70 140 90 L134 182 Q134 200 90 200 Q46 200 46 182Z"
-                fill={color} stroke="rgba(0,0,0,0.2)" strokeWidth="1.5" className="transition-all duration-300"/>
-                
-              {/* Mangas */}
-              {mangas === 'Larga' && (
-                <>
-                  <path d="M40 98 L18 162" stroke={color} strokeWidth="18" strokeLinecap="round" className="transition-all duration-300"/>
-                  <path d="M140 98 L162 162" stroke={color} strokeWidth="18" strokeLinecap="round" className="transition-all duration-300"/>
-                </>
-              )}
-              {mangas === 'Corta' && (
-                <>
-                  <path d="M40 98 L30 120" stroke={color} strokeWidth="18" strokeLinecap="round" className="transition-all duration-300"/>
-                  <path d="M140 98 L150 120" stroke={color} strokeWidth="18" strokeLinecap="round" className="transition-all duration-300"/>
-                </>
-              )}
-
-              {/* Piernas Avatar */}
-              <path d="M46 182 L35 250 M134 182 L145 250" stroke="rgba(245,240,232,0.1)" strokeWidth="12" strokeLinecap="round"/>
-              
-              {/* Detalles Tejido (textura simulada ligera) */}
-              <path d="M50 124 Q90 115 130 124" stroke="rgba(0,0,0,0.1)" strokeWidth="1"/>
-              <path d="M48 142 Q90 135 132 142" stroke="rgba(0,0,0,0.1)" strokeWidth="1"/>
-              
-              {/* Cuello Corte (mask/overlay) */}
-              <path d={cuelloPath} fill="#1C1C1C" stroke="rgba(245,240,232,0.1)" strokeWidth="1.5" className="transition-all duration-300"/>
-            </svg>
-
-            {/* Resumen */}
-            <div className="mt-8 pt-6 border-t border-wool-cream/10 w-full text-center space-y-1">
-              <p className="text-inca-gold font-display text-xl">{tejido} · {color}</p>
-              <p className="text-wool-cream/60 text-sm">Cuello {cuello} — Manga {mangas}</p>
-              <p className="text-wool-cream/40 text-xs">Talla ajustada a {size} ({gender})</p>
-            </div>
-            
-            <button className="btn-primary w-full mt-6">Añadir al Carrito — S/ 250</button>
+    <div className="flex h-[calc(100vh-4rem)] bg-stone-50 overflow-hidden">
+      {/* ── Panel Izquierdo: Visor 360° ── */}
+      <main className="flex-1 flex flex-col relative border-r border-gray-200">
+        {/* Cabecera del Visor */}
+        <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 z-10">
+          <Link
+            href={`/producto/${product.id}`}
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-andean-black transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Volver al producto
+          </Link>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={resetView}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded text-sm text-gray-500 hover:border-andean-black hover:text-andean-black transition-all"
+            >
+              <RotateCcw className="w-4 h-4" /> Reiniciar vista
+            </button>
           </div>
         </div>
-      </div>
+
+        {/* Área de la Imagen / Video Interactivo */}
+        <div
+          className={`flex-1 relative w-full h-full select-none ${
+            isDragging ? "cursor-grabbing" : "cursor-grab"
+          }`}
+          onMouseDown={(e: ReactMouseEvent) => handleDragStart(e.clientX)}
+          onMouseMove={(e: ReactMouseEvent) => handleDragMove(e.clientX)}
+          onMouseUp={handleDragEnd}
+          onMouseLeave={handleDragEnd}
+          onTouchStart={(e: ReactTouchEvent) =>
+            handleDragStart(e.touches[0].clientX)
+          }
+          onTouchMove={(e: ReactTouchEvent) =>
+            handleDragMove(e.touches[0].clientX)
+          }
+          onTouchEnd={handleDragEnd}
+        >
+          {isVideoProduct ? (
+            <div className="absolute inset-0 flex items-center justify-center p-8">
+              <video
+                ref={videoRef}
+                src={videoUrl}
+                poster={posterUrl}
+                muted
+                playsInline
+                preload="auto"
+                className="max-w-full max-h-full object-contain pointer-events-none"
+              />
+            </div>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center p-8 pointer-events-none">
+              <img
+                src={currentImageUrl}
+                alt={`${product.name} - Vista 360`}
+                draggable={false}
+                className="max-w-full max-h-full object-contain pointer-events-none"
+              />
+            </div>
+          )}
+
+          {/* Indicador de carga */}
+          {!isReady && (
+            <div className="absolute inset-0 flex items-center justify-center bg-stone-50/80 z-20">
+              <p className="text-xs font-medium text-gray-500 animate-pulse">
+                Cargando vista 360°…
+              </p>
+            </div>
+          )}
+
+          {/* Indicadores sobre la imagen */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-white/80 backdrop-blur text-xs font-medium text-andean-black rounded-full shadow-sm pointer-events-none">
+            Arrastra horizontalmente para rotar el producto
+          </div>
+        </div>
+      </main>
+
+      {/* ── Panel Derecho: Info & Recomendador ── */}
+      <aside className="w-96 flex flex-col bg-white overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <p className="text-[10px] tracking-widest uppercase text-inca-gold font-semibold mb-1">
+            {product.category}
+          </p>
+          <h1 className="font-display text-2xl leading-tight text-andean-black mb-2">
+            {product.name}
+          </h1>
+          <p className="text-xl font-bold text-andean-black mb-4">
+            S/ {product.price}
+          </p>
+          <p className="text-sm text-gray-600 leading-relaxed">
+            {product.description}
+          </p>
+        </div>
+
+        {/* Recomendador de Tallas */}
+        <div className="p-6 border-b border-gray-200 bg-stone-50">
+          <div className="flex items-center gap-2 mb-4">
+            <Ruler className="w-5 h-5 text-inca-gold" />
+            <h3 className="font-semibold text-andean-black uppercase tracking-wider text-sm">
+              Recomendador de Talla
+            </h3>
+          </div>
+          <p className="text-xs text-gray-500 mb-4">
+            Ingresa tu peso y estatura para que podamos sugerirte la talla ideal
+            para este modelo.
+          </p>
+
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest text-gray-500 mb-1">
+                Peso (kg)
+              </label>
+              <input
+                type="number"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                placeholder="Ej. 70"
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-inca-gold focus:ring-1 focus:ring-inca-gold"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest text-gray-500 mb-1">
+                Estatura (cm)
+              </label>
+              <input
+                type="number"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+                placeholder="Ej. 175"
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-inca-gold focus:ring-1 focus:ring-inca-gold"
+              />
+            </div>
+          </div>
+
+          {recommendedSize && (
+            <div className="bg-white border border-gray-200 p-4 rounded text-center shadow-sm">
+              <p className="text-xs text-gray-500 mb-1">
+                Tu talla recomendada es
+              </p>
+              <p className="text-2xl font-bold text-andean-black">
+                {recommendedSize}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Detalles Adicionales y Añadir al Carrito */}
+        <div className="p-6 mt-auto">
+          <div className="bg-wiphala-red/5 p-4 rounded mb-6 border border-wiphala-red/10 flex items-start gap-3">
+            <Info className="w-5 h-5 text-wiphala-red flex-shrink-0" />
+            <p className="text-xs text-wiphala-red/90 leading-relaxed">
+              Estás viendo las fotografías originales de esta prenda en alta
+              resolución. Al seleccionar una talla, estás garantizando el tejido
+              y ajuste mostrados.
+            </p>
+          </div>
+
+          <button
+            onClick={handleAddToCart}
+            className={`w-full flex items-center justify-center gap-2 py-4 text-sm font-bold tracking-widest uppercase rounded transition-all shadow-md ${
+              addedFeedback
+                ? "bg-coca-green text-white"
+                : "bg-andean-black text-wool-cream hover:bg-inca-gold hover:text-andean-black"
+            }`}
+          >
+            {addedFeedback ? (
+              <>
+                <CheckCircle2 className="w-4 h-4" /> ¡Añadido al carrito!
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="w-4 h-4" /> Agregar al carrito{" "}
+                {recommendedSize ? `(Talla ${recommendedSize})` : ""}
+              </>
+            )}
+          </button>
+        </div>
+      </aside>
     </div>
-  )
+  );
 }

@@ -1,96 +1,140 @@
-import Image from 'next/image'
-import Link from 'next/link'
+"use client";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
-  Heart, Users, Leaf, Award, MapPin, Sparkles, ArrowRight, Quote
-} from 'lucide-react'
+  Heart,
+  Users,
+  Leaf,
+  Award,
+  MapPin,
+  Sparkles,
+  ArrowRight,
+  Quote,
+} from "lucide-react";
+import { settingsApi } from "@/services/api";
 
-export const metadata = { title: 'Nosotros — Aramayus Art | Textil Artesanal Andino' }
+const DEFAULT_SETTINGS = {
+  title: "Nuestra historia",
+  subtitle: "Tejiendo cultura desde 1990",
+  description:
+    "Prendas artesanales únicas, elaboradas por manos peruanas con técnicas ancestrales transmitidas de generación en generación.",
+  mission:
+    "Preservar y revalorar el arte textil andino creando prendas de alta calidad que conecten nuestra herencia cultural con el mundo moderno.",
+  vision:
+    "Ser la marca referente a nivel global en moda ética y sostenible inspirada en la cosmovisión andina.",
+  image: "/images/nosotros-hero.jpeg",
+};
 
 const VALUES = [
   {
     icon: Heart,
-    title: 'Hecho con amor',
+    title: "Hecho con amor",
     description:
-      'Cada prenda lleva consigo horas de dedicación de artesanas peruanas que han heredado el arte del tejido de sus abuelas. No producimos en masa: creamos con intención.',
+      "Cada prenda lleva consigo horas de dedicación de artesanas peruanas que han heredado el arte del tejido de sus abuelas. No producimos en masa: creamos con intención.",
   },
   {
     icon: Leaf,
-    title: 'Sostenible por naturaleza',
+    title: "Sostenible por naturaleza",
     description:
-      'Usamos fibras naturales como Alpaca Baby, Algodón Pima y lana de oveja. Nuestros tintes son vegetales y nuestros procesos respetan el agua y la tierra andina.',
+      "Usamos fibras naturales como Alpaca Baby, Algodón Pima y lana de oveja. Nuestros tintes son vegetales y nuestros procesos respetan el agua y la tierra andina.",
   },
   {
     icon: Users,
-    title: 'Comunidad primero',
+    title: "Comunidad primero",
     description:
-      'El 40% de nuestros ingresos regresa directamente a las comunidades artesanas de Cusco, Puno y Ayacucho, financiando talleres, materiales y educación.',
+      "El 40% de nuestros ingresos regresa directamente a las comunidades artesanas de Cusco, Puno y Ayacucho, financiando talleres, materiales y educación.",
   },
   {
     icon: Award,
-    title: 'Calidad ancestral',
+    title: "Calidad ancestral",
     description:
-      'Técnicas de tejido con más de 500 años de historia, combinadas con estándares de calidad modernos. Cada pieza es inspeccionada a mano antes de llegar a ti.',
+      "Técnicas de tejido con más de 500 años de historia, combinadas con estándares de calidad modernos. Cada pieza es inspeccionada a mano antes de llegar a ti.",
   },
-]
+];
 
 const TEAM = [
   {
-    name: 'Lucía Aramayo',
-    role: 'Fundadora & Directora Creativa',
-    image: '/images/team/lucia.jpeg',
-    quote: 'Quería que el mundo viera lo que yo veía en las manos de mi abuela: magia.',
+    name: "Lucía Aramayo",
+    role: "Fundadora & Directora Creativa",
+    image: "/images/team/lucia.jpeg",
+    quote:
+      "Quería que el mundo viera lo que yo veía en las manos de mi abuela: magia.",
   },
   {
-    name: 'Rosa Quispe',
-    role: 'Maestra Tejedora, Cusco',
-    image: '/images/team/rosa.jpeg',
-    quote: 'Tejo desde los 8 años. Cada punto tiene un significado en nuestra cultura.',
+    name: "Rosa Quispe",
+    role: "Maestra Tejedora, Cusco",
+    image: "/images/team/rosa.jpeg",
+    quote:
+      "Tejo desde los 8 años. Cada punto tiene un significado en nuestra cultura.",
   },
   {
-    name: 'Marco Flores',
-    role: 'Director de Operaciones',
-    image: '/images/team/marco.jpeg',
-    quote: 'Construimos puentes entre el arte ancestral y el mundo contemporáneo.',
+    name: "Marco Flores",
+    role: "Director de Operaciones",
+    image: "/images/team/marco.jpeg",
+    quote:
+      "Construimos puentes entre el arte ancestral y el mundo contemporáneo.",
   },
-]
+];
 
 const MILESTONES = [
-  { year: '2017', text: 'Fundación de Aramayus Art en Cusco con 3 artesanas locales.' },
-  { year: '2019', text: 'Primera colección internacional presentada en la Feria Artesanal de Lima.' },
-  { year: '2021', text: 'Alianza con 12 comunidades andinas. Más de 80 artesanas colaboradoras.' },
-  { year: '2023', text: 'Lanzamiento del Probador Virtual: moda ancestral con tecnología moderna.' },
-  { year: '2025', text: 'Más de 10,000 prendas enviadas a 35 países. El tejido andino al mundo.' },
-]
+  {
+    year: "2017",
+    text: "Fundación de Aramayus Art en Cusco con 3 artesanas locales.",
+  },
+  {
+    year: "2019",
+    text: "Primera colección internacional presentada en la Feria Artesanal de Lima.",
+  },
+  {
+    year: "2021",
+    text: "Alianza con 12 comunidades andinas. Más de 80 artesanas colaboradoras.",
+  },
+  {
+    year: "2023",
+    text: "Lanzamiento del Probador Virtual: moda ancestral con tecnología moderna.",
+  },
+  {
+    year: "2025",
+    text: "Más de 10,000 prendas enviadas a 35 países. El tejido andino al mundo.",
+  },
+];
 
 export default function NosotrosPage() {
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+
+  useEffect(() => {
+    settingsApi
+      .getNosotros()
+      .then(({ data }) => setSettings({ ...DEFAULT_SETTINGS, ...data }))
+      .catch(console.error);
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
-
-      {/* ── Hero ──────────────────────────────────────────────────────────────── */}
       <section className="relative h-[70vh] min-h-[500px] flex items-end overflow-hidden">
         <div className="absolute inset-0 bg-andean-black">
           <Image
-            src="/images/nosotros-hero.jpeg"
+            src={settings.image || DEFAULT_SETTINGS.image}
             alt="Artesanas tejiendo en los Andes"
             fill
             priority
             className="object-cover opacity-50"
           />
         </div>
-        {/* Overlay gradiente */}
         <div className="absolute inset-0 bg-gradient-to-t from-andean-black via-andean-black/30 to-transparent" />
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 pb-16 w-full">
           <p className="text-inca-gold text-[11px] tracking-[4px] uppercase font-semibold mb-3">
-            Nuestra historia
+            {settings.title}
           </p>
           <h1 className="font-display text-4xl md:text-6xl text-wool-cream leading-tight max-w-3xl">
-            Arte que viste,<br />
+            Arte que viste,
+            <br />
             <span className="text-inca-gold italic">alma que perdura</span>
           </h1>
           <p className="text-wool-cream/70 text-base mt-4 max-w-xl leading-relaxed">
-            Somos un puente entre el pasado milenario de los Andes y el presente.
-            Cada prenda es una historia, cada hilo es una voz.
+            {settings.subtitle}
           </p>
         </div>
       </section>
@@ -105,21 +149,22 @@ export default function NosotrosPage() {
             Nacimos de una historia de manos y memoria
           </h2>
           <div className="space-y-4 text-gray-600 leading-relaxed text-[15px]">
+            <p>{settings.description}</p>
             <p>
-              Aramayus Art nació en 2017 en las faldas del Cusco, cuando Lucía Aramayo
-              decidió que los tejidos que su abuela le enseñaba merecían llegar a todo el mundo.
-              Lo que comenzó como un pequeño taller con tres artesanas se convirtió en un
-              movimiento cultural.
+              Aramayus Art nació en 2017 en las faldas del Cusco, cuando Lucía
+              Aramayo decidió que los tejidos que su abuela le enseñaba merecían
+              llegar a todo el mundo. Lo que comenzó como un pequeño taller con
+              tres artesanas se convirtió en un movimiento cultural.
             </p>
             <p>
-              Hoy trabajamos con más de 80 maestras tejedoras de las comunidades de Cusco,
-              Puno y Ayacucho. Cada una preserva técnicas de más de 500 años: el telar de
-              cintura, el tejido Wari, los bordados Chakana y los tintes naturales con plantas
-              medicinales andinas.
+              Hoy trabajamos con más de 80 maestras tejedoras de las comunidades
+              de Cusco, Puno y Ayacucho. Cada una preserva técnicas de más de
+              500 años: el telar de cintura, el tejido Wari, los bordados
+              Chakana y los tintes naturales con plantas medicinales andinas.
             </p>
             <p>
-              No somos una marca de fast fashion. Somos un archivo vivo de la cultura textil
-              andina, traducida en prendas que puedes usar hoy.
+              No somos una marca de fast fashion. Somos un archivo vivo de la
+              cultura textil andina, traducida en prendas que puedes usar hoy.
             </p>
           </div>
           <Link
@@ -134,7 +179,7 @@ export default function NosotrosPage() {
         <div className="relative">
           <div className="relative aspect-[4/5] rounded-sm overflow-hidden shadow-2xl">
             <Image
-              src="/images/nosotros-taller.jpeg"
+              src="/images/imagenart.jpg"
               alt="Taller de tejido Aramayus Art"
               fill
               className="object-cover"
@@ -143,28 +188,61 @@ export default function NosotrosPage() {
           {/* Badge flotante */}
           <div className="absolute -bottom-6 -left-6 bg-inca-gold text-andean-black px-6 py-4 rounded-sm shadow-xl">
             <p className="text-3xl font-display font-bold">80+</p>
-            <p className="text-[10px] uppercase tracking-widest font-semibold">Artesanas</p>
+            <p className="text-[10px] uppercase tracking-widest font-semibold">
+              Artesanas
+            </p>
           </div>
         </div>
       </section>
 
-      {/* ── Valores ───────────────────────────────────────────────────────────── */}
+      <section className="bg-stone-50 py-20">
+        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-10 items-start">
+          <div className="bg-white border border-gray-100 rounded-sm p-8 shadow-sm">
+            <p className="text-inca-gold text-[10px] tracking-[4px] uppercase font-semibold mb-3">
+              Misión
+            </p>
+            <h2 className="font-display text-3xl text-andean-black mb-4">
+              Nuestra razón de ser
+            </h2>
+            <p className="text-gray-600 leading-relaxed">{settings.mission}</p>
+          </div>
+          <div className="bg-white border border-gray-100 rounded-sm p-8 shadow-sm">
+            <p className="text-inca-gold text-[10px] tracking-[4px] uppercase font-semibold mb-3">
+              Visión
+            </p>
+            <h2 className="font-display text-3xl text-andean-black mb-4">
+              Nuestro horizonte
+            </h2>
+            <p className="text-gray-600 leading-relaxed">{settings.vision}</p>
+          </div>
+        </div>
+      </section>
+
       <section className="bg-stone-50 py-20">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-14">
             <p className="text-inca-gold text-[10px] tracking-[4px] uppercase font-semibold mb-3">
               Lo que nos mueve
             </p>
-            <h2 className="font-display text-3xl text-andean-black">Nuestros valores</h2>
+            <h2 className="font-display text-3xl text-andean-black">
+              Nuestros valores
+            </h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {VALUES.map(({ icon: Icon, title, description }) => (
-              <div key={title} className="bg-white p-8 rounded-sm border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
+              <div
+                key={title}
+                className="bg-white p-8 rounded-sm border border-gray-100 shadow-sm hover:shadow-md transition-shadow group"
+              >
                 <div className="w-10 h-10 bg-inca-gold/10 rounded-sm flex items-center justify-center mb-5 group-hover:bg-inca-gold/20 transition-colors">
                   <Icon className="w-5 h-5 text-inca-gold" />
                 </div>
-                <h3 className="font-display text-lg text-andean-black mb-3">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
+                <h3 className="font-display text-lg text-andean-black mb-3">
+                  {title}
+                </h3>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  {description}
+                </p>
               </div>
             ))}
           </div>
@@ -175,7 +253,7 @@ export default function NosotrosPage() {
       <section className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-16 items-center">
         <div className="relative aspect-[4/3] rounded-sm overflow-hidden shadow-xl order-2 md:order-1">
           <Image
-            src="/images/nosotros-mapa.jpeg"
+            src="/images/ausangate.jpg"
             alt="Comunidades andinas de Aramayus Art"
             fill
             className="object-cover"
@@ -183,7 +261,9 @@ export default function NosotrosPage() {
           <div className="absolute inset-0 bg-gradient-to-tr from-andean-black/60 to-transparent flex items-end p-8">
             <div className="flex items-center gap-2 text-wool-cream">
               <MapPin className="w-5 h-5 text-inca-gold" />
-              <span className="text-sm font-semibold tracking-wide">Cusco, Puno & Ayacucho — Perú</span>
+              <span className="text-sm font-semibold tracking-wide">
+                Cusco, Puno & Ayacucho — Perú
+              </span>
             </div>
           </div>
         </div>
@@ -196,21 +276,33 @@ export default function NosotrosPage() {
           </h2>
           <div className="space-y-4 text-gray-600 leading-relaxed text-[15px]">
             <p>
-              Nuestros talleres se ubican a más de 3,400 metros sobre el nivel del mar. En esas
-              alturas, donde el aire es más puro y el tiempo transcurre diferente, las artesanas
-              dan vida a cada pieza.
+              Nuestros talleres se ubican a más de 3,400 metros sobre el nivel
+              del mar. En esas alturas, donde el aire es más puro y el tiempo
+              transcurre diferente, las artesanas dan vida a cada pieza.
             </p>
             <p>
-              Las comunidades con las que trabajamos tienen acceso a mercados internacionales
-              gracias a Aramayus Art, lo que les permite mantener vivas sus tradiciones sin
-              depender de intermediarios que suelen quedarse con la mayor parte del valor.
+              Las comunidades con las que trabajamos tienen acceso a mercados
+              internacionales gracias a Aramayus Art, lo que les permite
+              mantener vivas sus tradiciones sin depender de intermediarios que
+              suelen quedarse con la mayor parte del valor.
             </p>
           </div>
           <div className="mt-8 grid grid-cols-3 gap-4">
-            {[['35', 'Países'], ['10K+', 'Prendas'], ['12', 'Comunidades']].map(([num, label]) => (
-              <div key={label} className="text-center p-4 border border-gray-100 rounded-sm">
-                <p className="font-display text-2xl text-andean-black font-bold">{num}</p>
-                <p className="text-[10px] uppercase tracking-widest text-gray-400 mt-1">{label}</p>
+            {[
+              ["35", "Países"],
+              ["10K+", "Prendas"],
+              ["12", "Comunidades"],
+            ].map(([num, label]) => (
+              <div
+                key={label}
+                className="text-center p-4 border border-gray-100 rounded-sm"
+              >
+                <p className="font-display text-2xl text-andean-black font-bold">
+                  {num}
+                </p>
+                <p className="text-[10px] uppercase tracking-widest text-gray-400 mt-1">
+                  {label}
+                </p>
               </div>
             ))}
           </div>
@@ -224,7 +316,9 @@ export default function NosotrosPage() {
             <p className="text-inca-gold text-[10px] tracking-[4px] uppercase font-semibold mb-3">
               Nuestra trayectoria
             </p>
-            <h2 className="font-display text-3xl text-wool-cream">El camino recorrido</h2>
+            <h2 className="font-display text-3xl text-wool-cream">
+              El camino recorrido
+            </h2>
           </div>
           <div className="relative">
             {/* Línea vertical */}
@@ -233,11 +327,15 @@ export default function NosotrosPage() {
               {MILESTONES.map(({ year, text }) => (
                 <div key={year} className="flex gap-8 items-start">
                   <div className="flex-shrink-0 w-16 text-right">
-                    <span className="text-inca-gold font-display text-lg font-bold">{year}</span>
+                    <span className="text-inca-gold font-display text-lg font-bold">
+                      {year}
+                    </span>
                   </div>
                   {/* Punto */}
                   <div className="flex-shrink-0 w-3 h-3 rounded-full bg-inca-gold mt-1.5 ring-4 ring-inca-gold/20" />
-                  <p className="text-wool-cream/70 text-sm leading-relaxed pt-0.5">{text}</p>
+                  <p className="text-wool-cream/70 text-sm leading-relaxed pt-0.5">
+                    {text}
+                  </p>
                 </div>
               ))}
             </div>
@@ -251,7 +349,9 @@ export default function NosotrosPage() {
           <p className="text-inca-gold text-[10px] tracking-[4px] uppercase font-semibold mb-3">
             Las personas detrás
           </p>
-          <h2 className="font-display text-3xl text-andean-black">Nuestro equipo</h2>
+          <h2 className="font-display text-3xl text-andean-black">
+            Nuestro equipo
+          </h2>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {TEAM.map(({ name, role, image, quote }) => (
@@ -271,7 +371,9 @@ export default function NosotrosPage() {
                 </div>
               </div>
               <h3 className="font-display text-lg text-andean-black">{name}</h3>
-              <p className="text-xs text-inca-gold uppercase tracking-widest font-semibold">{role}</p>
+              <p className="text-xs text-inca-gold uppercase tracking-widest font-semibold">
+                {role}
+              </p>
             </div>
           ))}
         </div>
@@ -285,8 +387,9 @@ export default function NosotrosPage() {
             Lleva un pedazo de los Andes contigo
           </h2>
           <p className="text-gray-500 text-sm leading-relaxed mb-8">
-            Cada prenda que eliges apoya a una artesana, preserva una técnica ancestral
-            y te conecta con una cultura de más de 500 años de historia.
+            Cada prenda que eliges apoya a una artesana, preserva una técnica
+            ancestral y te conecta con una cultura de más de 500 años de
+            historia.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -305,5 +408,5 @@ export default function NosotrosPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }

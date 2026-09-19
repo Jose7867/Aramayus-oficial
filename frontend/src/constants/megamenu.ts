@@ -60,7 +60,7 @@ export const PANELS: CategoryPanel[] = [
     },
     sectionTitle: 'Diseñalo tú misma',
     photos: [
-      { label: 'Camisas',      image: '/images/products/camisa-chakana.jpeg', href: '/catalogo?category=Camisas' },
+      { label: 'Camisas',      image: '/images/products/chompa-wari.jpeg', href: '/catalogo?category=Camisas' },
       { label: 'Blusas',       image: '/images/products/blusa.jpeg',          href: '/catalogo?category=Blusas' },
       { label: 'Camisas Mao',  image: '/images/products/camisa-mao.jpeg',     href: '/catalogo?category=CamisasMao' },
       { label: 'Camisas Lino', image: '/images/products/camisa-lino.jpeg',    href: '/catalogo?category=CamisasLino' },

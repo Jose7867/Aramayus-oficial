@@ -19,8 +19,8 @@ const config: Config = {
         'warm-mid':     '#F0EBE0',
       },
       fontFamily: {
-        display: ['Playfair Display', 'serif'],
-        sans:    ['Inter', 'sans-serif'],
+        display: ['var(--font-display)', 'Playfair Display', 'serif'],
+        sans:    ['var(--font-sans)', 'Inter', 'sans-serif'],
       },
       backgroundImage: {
         'andean-pattern': "repeating-linear-gradient(90deg,#C8860A 0px,#C8860A 8px,#8B1A1A 8px,#8B1A1A 16px,#2D5A3D 16px,#2D5A3D 24px,#7B5EA7 24px,#7B5EA7 32px,#1A0A00 32px,#1A0A00 40px,#7B5EA7 40px,#7B5EA7 48px,#2D5A3D 48px,#2D5A3D 56px,#8B1A1A 56px,#8B1A1A 64px)",

@@ -5,7 +5,7 @@ import { CATEGORIES } from '@constants/index'
 const IMG_MAP: Record<string, string> = {
   Chompas:    '/images/products/chompa-wari.jpeg',
   Ponchos:    '/images/products/poncho.jpeg',
-  Camisas:    '/images/products/camisa-chakana.jpeg',
+  Camisas:    '/images/products/chompa-wari.jpeg',
   Bolsos:     '/images/products/bolso1.jpeg',
   Guantes:   '/images/products/guante-tejido.jpeg',
   Accesorios: '/images/products/bolso1.jpeg',
@@ -20,13 +20,15 @@ export function CategoriesGrid() {
           <h2 className="font-display text-4xl">Categorías</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {CATEGORIES.map((cat) => (
+          {CATEGORIES.map((cat, index) => (
             <Link key={cat} href={`/catalogo?category=${cat}`}
-              className="relative aspect-square rounded-sm overflow-hidden group">
+              className="relative aspect-square rounded-sm overflow-hidden group bg-andean-black/5">
               <Image 
                 src={IMG_MAP[cat] || '/images/products/chompa-wari.jpeg'} 
                 alt={cat} 
                 fill
+                priority={index < 3}
+                sizes="(max-width: 768px) 50vw, 33vw"
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />

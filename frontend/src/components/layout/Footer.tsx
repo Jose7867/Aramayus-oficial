@@ -21,16 +21,36 @@ export function Footer() {
         <div>
           <h4 className="text-wool-cream/30 text-[10px] tracking-[2px] uppercase mb-4">Navegación</h4>
           <ul className="space-y-2">
-            {['Inicio','Catálogo','Nosotros','Probador Virtual','Contacto'].map((item) => (
-              <li key={item}><Link href="#" className="text-wool-cream/60 text-sm hover:text-inca-gold transition-colors">{item}</Link></li>
+            {[
+              { label: 'Inicio', href: '/' },
+              { label: 'Catálogo', href: '/catalogo' },
+              { label: 'Nosotros', href: '/nosotros' },
+              { label: 'Probador Virtual', href: '/probador' },
+              { label: 'Contacto', href: '/contacto' }
+            ].map((item) => (
+              <li key={item.label}>
+                <Link href={item.href} className="text-wool-cream/60 text-sm hover:text-inca-gold transition-colors">
+                  {item.label}
+                </Link>
+              </li>
             ))}
           </ul>
         </div>
         <div>
           <h4 className="text-wool-cream/30 text-[10px] tracking-[2px] uppercase mb-4">Información</h4>
           <ul className="space-y-2">
-            {['Nuestra Historia','Política de Privacidad','Términos y Condiciones','Devoluciones','Envíos'].map((item) => (
-              <li key={item}><Link href="#" className="text-wool-cream/60 text-sm hover:text-inca-gold transition-colors">{item}</Link></li>
+            {[
+              { label: 'Nuestra Historia', href: '/nosotros' },
+              { label: 'Política de Privacidad', href: '/politica-de-privacidad' },
+              { label: 'Términos y Condiciones', href: '/terminos-y-condiciones' },
+              { label: 'Devoluciones', href: '/devoluciones' },
+              { label: 'Envíos', href: '/envios' }
+            ].map((item) => (
+              <li key={item.label}>
+                <Link href={item.href} className="text-wool-cream/60 text-sm hover:text-inca-gold transition-colors">
+                  {item.label}
+                </Link>
+              </li>
             ))}
           </ul>
         </div>

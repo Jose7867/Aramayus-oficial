@@ -5,8 +5,18 @@
 -- Admin (contraseña: Admin123!)
 INSERT INTO users (name, email, password_hash, role) VALUES
 ('Administrador', 'admin@aramayus.com',
- '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBpj3VhX1K4jie', 'admin')
-ON CONFLICT (email) DO NOTHING;
+ '$2a$12$L5IWuLwcJLqh8AkPX8HoYOlU777fuATcnLlEZN0Ox9BhYIjUVJOn2', 'admin')
+ON CONFLICT (email) DO UPDATE
+  SET password_hash = EXCLUDED.password_hash,
+      role          = EXCLUDED.role;
+
+-- Cliente de prueba (contraseña: Cliente123!)
+INSERT INTO users (name, email, password_hash, role) VALUES
+('Cliente Ejemplo', 'cliente@ejemplo.com',
+ '$2a$12$N/fh5nrC5yQdX1iNTK5t7.FofvHwq/bhBJVtmmsrNpHQ9vw1AYegK', 'customer')
+ON CONFLICT (email) DO UPDATE
+  SET password_hash = EXCLUDED.password_hash,
+      role          = EXCLUDED.role;
 
 -- Categorías
 INSERT INTO categories (name, description) VALUES
@@ -30,13 +40,22 @@ INSERT INTO products (name, description, category, price, original_price, colors
   '100% Lana de Alpaca Bebé', 420, 'Destacado', true
 ),
 (
-  'Camisa Chakana Verde',
-  'Camisa de algodón pima peruano con bordado a mano de la chakana (cruz andina). Fresca y cómoda para todo el año.',
-  'Camisas', 120.00, NULL,
-  '["#2D5A3D","#7B5EA7","#F5F0E8"]',
-  '["XS","S","M","L"]',
-  '{"XS":{"#2D5A3D":3},"S":{"#2D5A3D":8,"#7B5EA7":4},"M":{"#F5F0E8":6},"L":{"#2D5A3D":2}}',
-  'Algodón Pima Peruano', 280, 'Nuevo', true
+  'Chompa Beige',
+  'Chompa artesanal en color beige, tejida con técnicas tradicionales.',
+  'Chompas', 160.00, NULL,
+  '["#F5F5DC"]',
+  '["S","M","L","XL"]',
+  '{"S":{"#F5F5DC":5},"M":{"#F5F5DC":10},"L":{"#F5F5DC":8},"XL":{"#F5F5DC":2}}',
+  '100% Lana de Alpaca', 400, 'Nuevo', true
+),
+(
+  'Chompa Roja',
+  'Chompa artesanal en color rojo, tejida con técnicas tradicionales.',
+  'Chompas', 165.00, NULL,
+  '["#FF0000"]',
+  '["S","M","L","XL"]',
+  '{"S":{"#FF0000":5},"M":{"#FF0000":10},"L":{"#FF0000":8},"XL":{"#FF0000":2}}',
+  '100% Lana de Alpaca', 400, 'Nuevo', true
 ),
 (
   'Poncho Real Tawantinsuyu',

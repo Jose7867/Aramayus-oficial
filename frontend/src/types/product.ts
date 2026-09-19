@@ -6,12 +6,14 @@ export interface Product {
   price: number
   originalPrice?: number
   images: string[]
+  video360?: string      // path to 360° rotation video in /public
   colors: string[]       // hex values
   sizes: string[]        // ['XS','S','M','L','XL','XXL']
   stock: Record<string, Record<string, number>>  // { 'M': { '#8B1A1A': 5 } }
   material: string
   weight: number         // grams
   tag?: 'Nuevo' | 'Promo' | 'Destacado'
+  model?: string         // model name to map to the 360 images folder
   featured: boolean
   active: boolean
   createdAt: string

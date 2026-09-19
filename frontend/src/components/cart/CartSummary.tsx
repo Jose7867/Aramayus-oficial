@@ -23,19 +23,19 @@ export function CartSummary() {
         <h2 className="font-medium text-sm">Resumen del pedido</h2>
       </div>
       <div className="p-4 space-y-3 text-sm">
-        <div className="flex justify-between"><span className="text-gray-500">Subtotal</span><span>S/ {subtotal}</span></div>
+        <div className="flex justify-between"><span className="text-gray-500">Subtotal</span><span>S/ {subtotal.toFixed(2)}</span></div>
         <div className="flex justify-between">
           <span className="text-gray-500">Envío</span>
-          <span className={shipping === 0 ? 'text-coca-green font-medium' : ''}>{shipping === 0 ? 'Gratis' : `S/ ${shipping}`}</span>
+          <span className={shipping === 0 ? 'text-coca-green font-medium' : ''}>{shipping === 0 ? 'Gratis' : `S/ ${shipping.toFixed(2)}`}</span>
         </div>
         {discount > 0 && (
           <div className="flex justify-between text-coca-green">
-            <span>Descuento ({coupon})</span><span>−S/ {discount}</span>
+            <span>Descuento ({coupon})</span><span>−S/ {discount.toFixed(2)}</span>
           </div>
         )}
         <div className="border-t pt-3 flex justify-between">
           <span className="font-medium">Total</span>
-          <span className="font-display text-xl">S/ {total}</span>
+          <span className="font-display text-xl">S/ {total.toFixed(2)}</span>
         </div>
 
         {/* Cupón */}

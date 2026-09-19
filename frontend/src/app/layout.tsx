@@ -1,9 +1,25 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
+import { Playfair_Display, Inter } from 'next/font/google'
 import '../styles/globals.css'
-import { Navbar } from '@components/layout/Navbar'
-import { Footer } from '@components/layout/Footer'
+import { ConditionalShell } from '@components/layout/ConditionalShell'
 import { Providers } from './providers'
 import { Toaster } from 'react-hot-toast'
+
+// ─── Fuentes auto-hospedadas via next/font (sin render-blocking) ──────────────
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-display',
+  display: 'swap',
+})
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  variable: '--font-sans',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Aramayus Art — Textil Artesanal Andino',
@@ -19,14 +35,18 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#1A0A00',
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" className={`${playfair.variable} ${inter.variable}`}>
       <body>
         <Providers>
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
+          <ConditionalShell>{children}</ConditionalShell>
           <Toaster position="bottom-right" />
         </Providers>
       </body>

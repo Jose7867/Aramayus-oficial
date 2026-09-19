@@ -13,5 +13,6 @@
     "tailwind.config.*": "postcss.config.*",
     "package.json": "package-lock.json, yarn.lock, .npmrc",
     "next.config.*": "next-env.d.ts, tsconfig.json"
-  }
+  },
+  "prisma.pinToPrisma6": false
 }
