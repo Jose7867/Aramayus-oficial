@@ -1,21 +1,22 @@
-import knex from "knex";
 import path from "path";
-import fs from "fs";
+import knex from "knex";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 
-dotenv.config();
-
-const dataDir = path.join(__dirname, "..", "data");
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-
-const dbPath = process.env.DB_PATH || path.join(dataDir, "aramayus.db");
+dotenv.config({
+  path: path.resolve(__dirname, "../../../.env"),
+});
 
 export const db = knex({
-  client: "sqlite3",
-  connection: { filename: dbPath },
-  useNullAsDefault: true,
+  client: "pg",
+  connection: {
+    host: process.env.DB_HOST || "localhost",
+    port: Number(process.env.DB_PORT || 5432),
+    database: process.env.DB_NAME || "aramayus_art",
+    user: process.env.DB_USER || "postgres",
+    password: process.env.DB_PASSWORD,
+  },
 });
 
 async function seedDefaultUsers() {
@@ -40,13 +41,6 @@ async function seedDefaultUsers() {
       .first();
 
     if (existing) {
-      await db("users")
-        .where({ id: existing.id })
-        .update({
-          name: user.name,
-          role: user.role,
-          password_hash: await bcrypt.hash(user.password, 12),
-        });
       continue;
     }
 
@@ -138,13 +132,13 @@ async function ensureProductColumns() {
   );
 
   if (!columns.updated_at) {
-    await db.raw("ALTER TABLE products ADD COLUMN updated_at DATETIME");
+    await db.raw("ALTER TABLE products ADD COLUMN updated_at TIMESTAMP");
   }
 }
 
 async function seedDefaultProducts() {
-  const count = await db("products").count<{ "count(*)": number }>("*").first();
-  if ((count?.["count(*)"] ?? 0) > 0) return;
+  const result = await db("products").count<{ count: string }>("* as count").first(); 
+  if (Number(result?.count ?? 0) > 0) return;
 
   const products = [
     {
@@ -411,5 +405,5 @@ export async function initDb() {
   await seedDefaultUsers();
   await seedDefaultCategories();
   await seedDefaultProducts();
-  console.log("[DB] SQLite listo en", dbPath);
+  console.log("[DB] PostgreSQL listo");
 }

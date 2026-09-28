@@ -1,3 +1,4 @@
+import path from "path";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -14,7 +15,9 @@ import uploadRoutes from "./routes/uploads";
 import settingsRoutes from "./routes/settings";
 import { initDb } from "./config/database";
 
-dotenv.config();
+dotenv.config({
+  path: path.resolve(__dirname, "../../.env"),
+});
 
 const app = express();
 const PORT = Number(process.env.PORT) || 4000;
@@ -58,7 +61,10 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(morgan("dev"));
 
 // Archivos estáticos (imágenes subidas)
-app.use("/uploads", express.static("src/uploads"));
+app.use(
+  "/uploads",
+  express.static(path.resolve(__dirname, "../src/uploads")),
+);
 
 // Rutas
 app.use("/api/auth", authRoutes);
