@@ -83,8 +83,8 @@ app.get("/health", (_, res) =>
 // ─── Start ───────────────────────────────────────────────────────────────────
 async function start() {
   await initDb();
-  const server = app.listen(PORT, () =>
-    console.log(`🚀 Backend corriendo en http://localhost:${PORT}`),
+  const server = app.listen(PORT,"0.0.0.0", () =>
+    console.log(`🚀 Backend corriendo en puerto ${PORT}`),
   );
 
   server.on("error", (err: NodeJS.ErrnoException) => {
