@@ -10,6 +10,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'http',  hostname: 'localhost' },
       { protocol: 'https', hostname: 'res.cloudinary.com' },
+      { protocol: 'https', hostname: 'lpjixasyjxcvyljsepiq.supabase.co' },
     ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 86400,
