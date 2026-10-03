@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { randomUUID } from "crypto";
 import { db } from "../config/database";
+import {
+  supabase,
+  SUPABASE_BUCKET,
+} from "../config/supabase";
 
 function safeJsonParse<T>(value: unknown, fallback: T): T {
   if (value === undefined || value === null || value === "") return fallback;
@@ -15,6 +19,42 @@ function safeJsonParse<T>(value: unknown, fallback: T): T {
     }
   }
   return (value as T) ?? fallback;
+}
+
+async function uploadToSupabase(
+  file: Express.Multer.File,
+  folder: string,
+): Promise<string> {
+  const extension = file.originalname.includes(".")
+    ? file.originalname.substring(
+        file.originalname.lastIndexOf("."),
+      )
+    : "";
+
+  const filename = `${Date.now()}-${randomUUID()}${extension}`;
+
+  const filePath = `${folder}/${filename}`;
+
+  const { error } = await supabase.storage
+    .from(SUPABASE_BUCKET)
+    .upload(filePath, file.buffer, {
+      contentType: file.mimetype,
+      upsert: false,
+    });
+
+  if (error) {
+    throw new Error(
+      `Error al subir archivo a Supabase: ${error.message}`,
+    );
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage
+    .from(SUPABASE_BUCKET)
+    .getPublicUrl(filePath);
+
+  return publicUrl;
 }
 
 export async function getAllProducts(req: Request, res: Response) {
@@ -115,11 +155,14 @@ export async function createProduct(req: any, res: Response) {
       : [];
     const videoFile = req.files?.video360?.[0];
 
-    const images = imagesFiles.map(
-      (f: any) => `/uploads/products/${f.filename}`,
+    const images = await Promise.all(
+     imagesFiles.map((file: Express.Multer.File) =>
+       uploadToSupabase(file, "products"),
+     ),
     );
+
     const video360 = videoFile
-      ? `/uploads/products/${videoFile.filename}`
+      ? await uploadToSupabase(videoFile, "videos")
       : null;
 
     const parsedColors = safeJsonParse(colors, []);
@@ -179,9 +222,13 @@ export async function updateProduct(req: any, res: Response) {
     let finalImages = current?.images;
     if (req.body.existing_images !== undefined || imagesFiles.length) {
       const existing = safeJsonParse(req.body.existing_images, []);
-      const newImgs = imagesFiles.map(
-        (f: any) => `/uploads/products/${f.filename}`,
+      
+      const newImgs = await Promise.all(
+  	imagesFiles.map((file: Express.Multer.File) =>
+    	  uploadToSupabase(file, "products"),
+  	),
       );
+
       finalImages = JSON.stringify([...existing, ...newImgs]);
     }
 
@@ -189,7 +236,7 @@ export async function updateProduct(req: any, res: Response) {
     if (req.body.remove_video === "true") {
       finalVideo = null;
     } else if (videoFile) {
-      finalVideo = `/uploads/products/${videoFile.filename}`;
+      finalVideo = await uploadToSupabase(videoFile, "videos");
     }
 
     await db("products")
