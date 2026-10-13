@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Shirt, ShoppingBag, Users, Tag, Package, Settings, BarChart3, Grid3x3, Info, LogOut } from 'lucide-react'
+import { LayoutDashboard, Shirt, ShoppingBag, Users, Tag, Package, Settings, BarChart3, Grid3x3, Info, LogOut, Video } from 'lucide-react'
 import { useAuthStore } from '@store/authStore'
 
 const NAV = [
@@ -12,6 +12,7 @@ const NAV = [
   { label:'Clientes',    href:'/admin/clientes',        icon:Users },
   { label:'Categorías',  href:'/admin/categorias',      icon:Grid3x3 },
   { label:'Nosotros',    href:'/admin/nosotros',        icon:Info },
+  { label:'Video de portada', href:'/admin/video-portada', icon:Video },
   { label:'Inventario',  href:'/admin/configuracion',   icon:Package },
   { label:'Reportes',    href:'/admin/configuracion',   icon:BarChart3 },
   { label:'Config.',     href:'/admin/configuracion',   icon:Settings },

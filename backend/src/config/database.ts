@@ -402,6 +402,27 @@ export async function initDb() {
     });
   }
 
+  if (!(await exists("hero_settings"))) {
+    await db.schema.createTable("hero_settings", (t) => {
+      t.string("id").primary();
+      t.text("video_url").nullable();
+      t.boolean("enabled").notNullable().defaultTo(false);
+      t.timestamp("updated_at").defaultTo(db.fn.now());
+    });
+  }
+
+  const heroSettings = await db("hero_settings")
+    .where({ id: "homepage" })
+    .first();
+
+  if (!heroSettings) {
+    await db("hero_settings").insert({
+      id: "homepage",
+      video_url: null,
+      enabled: false,
+    });
+  }
+
   await seedDefaultUsers();
   await seedDefaultCategories();
   await seedDefaultProducts();

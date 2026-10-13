@@ -12,6 +12,7 @@ import userRoutes     from './routes/users'
 import categoryRoutes from './routes/categories'
 import uploadRoutes   from './routes/uploads'
 import settingsRoutes from './routes/settings'
+import heroRoutes     from './routes/hero'
 import { initDb }     from './config/database'
 
 dotenv.config()
@@ -60,6 +61,7 @@ app.use('/api/users',      userRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/uploads',    uploadRoutes)
 app.use('/api/settings',   settingsRoutes)
+app.use('/api/hero',       heroRoutes)
 
 // Health check
 app.get('/health', (_, res) => res.json({ status: 'ok', time: new Date().toISOString() }))

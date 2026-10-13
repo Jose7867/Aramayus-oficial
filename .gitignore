@@ -33,3 +33,6 @@ Thumbs.db
 # IDE
 .idea/
 *.swp
+
+# Videos de portada gestionados desde Supabase
+/frontend/public/images/products/video de muestra.mp4
