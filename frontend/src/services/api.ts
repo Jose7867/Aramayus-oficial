@@ -76,10 +76,5 @@ export const uploadsApi = {
     const formData = new FormData();
     formData.append("image", file);
     return api.post("/uploads/image", formData);
-  },
-  uploadVideo: (file: File) => {
-    const formData = new FormData();
-    formData.append("video", file);
-    return api.post("/uploads/video", formData);
-  },
+  }
 };

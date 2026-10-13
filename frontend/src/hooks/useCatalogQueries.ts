@@ -84,28 +84,21 @@ export function useProductsQuery(params?: Record<string, unknown>) {
   return useQuery<Product[]>({
     queryKey: ["products", params ?? {}],
     queryFn: async () => {
-      try {
-        const { data } = await productsApi.getAll(params ?? {});
-        const apiProducts = Array.isArray(data?.products)
-          ? data.products
-          : Array.isArray(data)
-            ? data
-            : [];
+      const { data } = await productsApi.getAll(params ?? {});
+      const apiProducts = Array.isArray(data?.products)
+        ? data.products
+        : Array.isArray(data)
+          ? data
+          : [];
 
-        if (apiProducts.length === 0) {
-          return PRODUCTS;
-        }
-
-        return apiProducts.map(
-          (product: Partial<Product> & Record<string, unknown>) =>
-            normalizeProduct(product),
-        );
-      } catch {
-        const category = params?.category;
-        return typeof category === "string"
-          ? PRODUCTS.filter((product) => product.category === category)
-          : PRODUCTS;
+      if (apiProducts.length === 0) {
+        return PRODUCTS;
       }
+
+      return apiProducts.map(
+        (product: Partial<Product> & Record<string, unknown>) =>
+          normalizeProduct(product),
+      );
     },
     staleTime: 60 * 1000,
   });
@@ -118,8 +111,9 @@ export function useFeaturedProductsQuery() {
       const { data } = await productsApi.getFeatured();
       const products = Array.isArray(data) ? data : [];
       return products.length > 0
-        ? products.map((product: Partial<Product> & Record<string, unknown>) =>
-            normalizeProduct(product),
+        ? products.map(
+            (product: Partial<Product> & Record<string, unknown>) =>
+              normalizeProduct(product),
           )
         : PRODUCTS.filter((product) => product.featured);
     },
