@@ -1,6 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Info, Save, Image as ImageIcon, LayoutTemplate } from "lucide-react";
+import {
+  Info,
+  Save,
+  Image as ImageIcon,
+  LayoutTemplate,
+  Video,
+} from "lucide-react";
 import { settingsApi, uploadsApi } from "@/services/api";
 
 type NosotrosFormData = {
@@ -10,6 +16,7 @@ type NosotrosFormData = {
   mission: string;
   vision: string;
   image: string;
+  homeVideo: string;
 };
 
 const initialFormData: NosotrosFormData = {
@@ -22,12 +29,14 @@ const initialFormData: NosotrosFormData = {
   vision:
     "Ser la marca referente a nivel global en moda ética y sostenible inspirada en la cosmovisión andina.",
   image: "/images/nosotros-hero.jpeg",
+  homeVideo: "/images/products/video%20de%20muestra.mp4",
 };
 
 export default function NosotrosAdminPage() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<NosotrosFormData>(initialFormData);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+  const [videoToUpload, setVideoToUpload] = useState<File | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -61,6 +70,14 @@ export default function NosotrosAdminPage() {
     setFormData((prev) => ({ ...prev, image: previewUrl }));
   };
 
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setVideoToUpload(file);
+    setFormData((prev) => ({ ...prev, homeVideo: URL.createObjectURL(file) }));
+  };
+
   const handleSave = async () => {
     setLoading(true);
     try {
@@ -69,11 +86,23 @@ export default function NosotrosAdminPage() {
         const { data: uploadData } = await uploadsApi.uploadImage(fileToUpload);
         finalImageUrl = uploadData.url;
       }
-      
-      const payload = { ...formData, image: finalImageUrl };
+
+      let finalVideoUrl = formData.homeVideo || "";
+      if (videoToUpload) {
+        const { data: uploadData } =
+          await uploadsApi.uploadVideo(videoToUpload);
+        finalVideoUrl = uploadData.url;
+      }
+
+      const payload = {
+        ...formData,
+        image: finalImageUrl,
+        homeVideo: finalVideoUrl,
+      };
       const { data } = await settingsApi.updateNosotros(payload);
       setFormData({ ...initialFormData, ...data });
       setFileToUpload(null);
+      setVideoToUpload(null);
       alert("Cambios guardados correctamente");
     } catch (err) {
       console.error(err);
@@ -274,6 +303,62 @@ export default function NosotrosAdminPage() {
                 web.
               </p>
             </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-sm p-6 shadow-sm">
+            <h2 className="text-sm font-semibold text-andean-black mb-4 uppercase tracking-widest border-b border-gray-100 pb-2 flex items-center gap-2">
+              <Video className="w-4 h-4 text-inca-gold" /> Video del inicio
+            </h2>
+            <video
+              key={formData.homeVideo}
+              src={formData.homeVideo}
+              controls
+              playsInline
+              className="mb-4 aspect-video w-full bg-black object-contain"
+            />
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Reemplazar video
+            </label>
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              onChange={handleVideoChange}
+              className="w-full text-xs text-gray-600 file:mr-3 file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-xs file:font-medium hover:file:bg-gray-200"
+            />
+            {videoToUpload && (
+              <p className="mt-2 truncate text-xs text-gray-500">
+                {videoToUpload.name}
+              </p>
+            )}
+            <label className="mt-4 block text-xs font-medium text-gray-700 mb-1">
+              O usar URL de video
+            </label>
+            <input
+              type="url"
+              value={videoToUpload ? "" : formData.homeVideo}
+              onChange={(e) => {
+                setVideoToUpload(null);
+                setFormData((prev) => ({ ...prev, homeVideo: e.target.value }));
+              }}
+              placeholder="https://..."
+              className="w-full px-3 py-2 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-inca-gold focus:ring-1 focus:ring-inca-gold"
+            />
+            <p className="mt-2 text-[10px] text-gray-400">
+              MP4, WEBM o MOV. Tamaño máximo: 50 MB.
+            </p>
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              type="button"
+              className="mt-5 w-full bg-andean-black text-white py-3 rounded-sm text-xs tracking-widest uppercase hover:bg-inca-gold transition-colors flex items-center justify-center gap-2 font-semibold shadow-sm disabled:opacity-70"
+            >
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              Guardar video
+            </button>
           </div>
         </div>
       </div>
