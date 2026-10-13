@@ -48,6 +48,11 @@ export const productsApi = {
   getFeatured: () => api.get("/products/featured"),
 };
 
+// Categories
+export const categoriesApi = {
+  getAll: () => api.get("/categories"),
+};
+
 // Orders
 export const ordersApi = {
   create: (data: object) => api.post("/orders", data),

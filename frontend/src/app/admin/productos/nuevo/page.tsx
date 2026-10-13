@@ -1,9 +1,9 @@
 "use client";
-import { useState } from "react";
+import {useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, UploadCloud, Save, Plus, X, Trash2 } from "lucide-react";
-import { productsApi } from "@/services/api";
+import {categoriesApi, productsApi } from "@/services/api";
 
 const PRESET_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "Único"];
 const PRESET_COLORS = [
@@ -24,10 +24,46 @@ type ColorEntry = { name: string; hex: string };
 export default function NuevoProductoPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<
+   { id: string; name: string }[]
+  >([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [video360, setVideo360] = useState<File | null>(null);
   const [video360Url, setVideo360Url] = useState<string>("");
+
+  useEffect(() => {
+  let active = true;
+
+  categoriesApi
+    .getAll()
+    .then(({ data }) => {
+      if (active) {
+        setCategories(Array.isArray(data) ? data : []);
+      }
+    })
+    .catch((error) => {
+      console.error("Error al cargar categorías:", error);
+
+      if (active) {
+        setCategoriesError(
+          "No se pudieron cargar las categorías. Recarga la página e inténtalo nuevamente.",
+        );
+      }
+    })
+    .finally(() => {
+      if (active) {
+        setCategoriesLoading(false);
+      }
+    });
+
+  return () => {
+    active = false;
+  };
+}, []);
+
 
   const [formData, setFormData] = useState({
     name: "",
@@ -613,15 +649,40 @@ export default function NuevoProductoPage() {
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   Categoría <span className="text-red-500">*</span>
                 </label>
-                <input
-                  required
-                  type="text"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  className="input-base w-full"
-                  placeholder="Ej. Chompas, Ponchos"
-                />
+                <select
+  required
+  name="category"
+  value={formData.category}
+  onChange={handleInputChange}
+  disabled={
+    categoriesLoading ||
+    categories.length === 0 ||
+    !!categoriesError
+  }
+  className="input-base w-full disabled:cursor-not-allowed disabled:opacity-60"
+>
+  <option value="">
+    {categoriesLoading
+      ? "Cargando categorías..."
+      : categoriesError
+        ? "Error al cargar categorías"
+        : categories.length === 0
+          ? "No hay categorías disponibles"
+          : "Selecciona una categoría"}
+  </option>
+
+  {categories.map((category) => (
+    <option key={category.id} value={category.name}>
+      {category.name}
+    </option>
+  ))}
+</select>
+
+{categoriesError && (
+  <p className="mt-1 text-xs text-red-600">
+    {categoriesError}
+  </p>
+)}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
